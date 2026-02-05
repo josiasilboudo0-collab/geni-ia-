@@ -1,59 +1,111 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Geni AI Studio - Premium Content</title>
+    <title>Geni AI Studio - Premium</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-      // Initialize theme before content renders
-      if (localStorage.getItem('genia_theme') === 'dark' || (!('genia_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            animation: {
-              'progress': 'progress 2s ease-in-out infinite',
-            },
-            keyframes: {
-              progress: {
-                '0%': { width: '0%', marginLeft: '0%' },
-                '50%': { width: '50%', marginLeft: '25%' },
-                '100%': { width: '100%', marginLeft: '100%' },
-              }
-            }
-          }
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { colors: { brand: '#6366f1' } } }
         }
-      }
     </script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.2.0",
+        "react-dom": "https://esm.sh/react-dom@18.2.0/client",
+        "@google/genai": "https://esm.sh/@google/genai"
+      }
+    }
+    </script>
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        /* Smooth transitions for theme switching */
-        * { transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease; }
+        body { font-family: 'Inter', sans-serif; transition: background 0.3s; }
     </style>
-<script type="importmap">
-{
-  "imports": {
-    "@google/genai": "https://esm.sh/@google/genai@^1.40.0",
-    "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
-    "jspdf": "https://esm.sh/jspdf@^2.5.1",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "react/": "https://esm.sh/react@^19.2.4/",
-    "react": "https://esm.sh/react@^19.2.4",
-    "recharts": "https://esm.sh/recharts@^2.12.0",
-    "pptxgenjs": "https://esm.sh/pptxgenjs@^3.12.0"
-  }
-}
-</script>
 </head>
-<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen">
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100">
     <div id="root"></div>
+
+    <script type="module">
+        import React, { useState, useEffect } from 'react';
+        import { createRoot } from 'react-dom';
+        import { GoogleGenerativeAI } from "@google/genai";
+
+        function App() {
+            const [input, setInput] = useState("");
+            const [messages, setMessages] = useState([{ role: 'ai', text: 'Bonjour ! Comment puis-je vous aider aujourd’hui ?' }]);
+            const [loading, setLoading] = useState(false);
+            const [dark, setDark] = useState(true);
+
+            // Gestion du thème
+            useEffect(() => {
+                document.documentElement.classList.toggle('dark', dark);
+            }, [dark]);
+
+            async function askAI() {
+                if (!input.trim()) return;
+                
+                const userMsg = { role: 'user', text: input };
+                setMessages(prev => [...prev, userMsg]);
+                setInput("");
+                setLoading(true);
+
+                try {
+                    // REMPLACER PAR VOTRE CLÉ OU UTILISER PROCESS.ENV SUR VERCEL
+                    const genAI = new GoogleGenerativeAI("VOTRE_CLE_API_ICI");
+                    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+                    
+                    const result = await model.generateContent(input);
+                    const response = await result.response;
+                    const text = response.text();
+                    
+                    setMessages(prev => [...prev, { role: 'ai', text }]);
+                } catch (error) {
+                    setMessages(prev => [...prev, { role: 'ai', text: "Erreur : Vérifiez votre clé API dans les paramètres." }]);
+                } finally {
+                    setLoading(false);
+                }
+            }
+
+            return React.createElement('div', { className: 'max-w-4xl mx-auto p-6 min-h-screen flex flex-col' },
+                // Header
+                React.createElement('header', { className: 'flex justify-between items-center mb-8' },
+                    React.createElement('h1', { className: 'text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent' }, 'Geni AI Studio'),
+                    React.createElement('button', { 
+                        onClick: () => setDark(!dark),
+                        className: 'p-2 rounded-lg bg-slate-200 dark:bg-slate-800'
+                    }, dark ? '☀️ Mode Clair' : '🌙 Mode Sombre')
+                ),
+
+                // Chat Zone
+                React.createElement('div', { className: 'flex-1 overflow-y-auto space-y-4 mb-6 p-4 rounded-xl bg-white dark:bg-slate-800 shadow-inner min-h-[400px]' },
+                    messages.map((m, i) => React.createElement('div', { 
+                        key: i, 
+                        className: `p-4 rounded-lg max-w-[80%] ${m.role === 'user' ? 'ml-auto bg-indigo-500 text-white' : 'mr-auto bg-slate-100 dark:bg-slate-700'}`
+                    }, m.text)),
+                    loading && React.createElement('div', { className: 'text-sm animate-pulse' }, 'Geni IA réfléchit...')
+                ),
+
+                // Input Zone
+                React.createElement('div', { className: 'flex gap-2' },
+                    React.createElement('input', {
+                        value: input,
+                        onChange: (e) => setInput(e.target.value),
+                        onKeyPress: (e) => e.key === 'Enter' && askAI(),
+                        placeholder: 'Posez votre question...',
+                        className: 'flex-1 p-4 rounded-xl border dark:border-slate-700 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500'
+                    }),
+                    React.createElement('button', {
+                        onClick: askAI,
+                        className: 'bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-4 rounded-xl font-bold transition'
+                    }, 'Envoyer')
+                )
+            );
+        }
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(React.createElement(App));
+    </script>
 </body>
 </html>
