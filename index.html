@@ -5,29 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Geni AI Studio</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script type="importmap">
-    {
-      "imports": {
-        "react": "https://esm.sh/react@18.2.0",
-        "react-dom": "https://esm.sh/react-dom@18.2.0",
-        "@google/genai": "https://esm.sh/@google/genai"
-      }
-    }
+    <style>
+        body { background-color: #0f172a; color: white; font-family: sans-serif; }
+        .chat-container { height: calc(100vh - 160px); }
     </script>
 </head>
-<body class="bg-slate-900 text-white">
+<body>
     <div id="root">
         <div class="flex items-center justify-center h-screen">
-            <p class="animate-pulse text-xl">Chargement de Geni AI Studio...</p>
+            <div class="text-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-blue-500 mb-4 mx-auto"></div>
+                <p class="text-blue-400">Initialisation de Geni AI...</p>
+            </div>
         </div>
     </div>
 
     <script type="module">
-        import React from 'react';
-        import ReactDOM from 'react-dom';
-        import { GoogleGenerativeAI } from "@google/genai";
+        import React from 'https://esm.sh/react@18.2.0';
+        import ReactDOM from 'https://esm.sh/react-dom@18.2.0/client';
+        import { GoogleGenerativeAI } from "https://esm.sh/@google/genai";
 
-        const { useState, useEffect } = React;
+        const { useState } = React;
 
         function App() {
             const [input, setInput] = useState("");
@@ -35,45 +33,56 @@
             const [loading, setLoading] = useState(false);
 
             const askAI = async () => {
-                if(!input.trim()) return;
-                const newMsgs = [...messages, { role: 'user', text: input }];
-                setMessages(newMsgs);
+                if(!input.trim() || loading) return;
+                
+                const userMsg = { role: 'user', text: input };
+                setMessages(prev => [...prev, userMsg]);
                 setLoading(true);
+                const currentInput = input;
                 setInput("");
 
                 try {
-                    // Mettez votre clé ici ou utilisez une variable d'environnement
-                    const genAI = new GoogleGenerativeAI("VOTRE_CLE_API");
+                    // REMPLACEZ ICI PAR VOTRE CLÉ GEMINI
+                    const genAI = new GoogleGenerativeAI("VOTRE_CLÉ_ICI");
                     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-                    const result = await model.generateContent(input);
+                    
+                    const result = await model.generateContent(currentInput);
                     const response = await result.response;
-                    setMessages([...newMsgs, { role: 'ai', text: response.text() }]);
+                    const text = response.text();
+                    
+                    setMessages(prev => [...prev, { role: 'ai', text }]);
                 } catch (e) {
-                    setMessages([...newMsgs, { role: 'ai', text: "Erreur de connexion à l'IA." }]);
-                } finally { setLoading(false); }
+                    console.error(e);
+                    setMessages(prev => [...prev, { role: 'ai', text: "Désolé, j'ai rencontré une erreur de connexion." }]);
+                } finally {
+                    setLoading(false);
+                }
             };
 
-            return React.createElement('div', { className: 'max-w-2xl mx-auto p-6 flex flex-col h-screen' },
-                React.createElement('h1', { className: 'text-3xl font-bold mb-8 text-blue-400' }, 'GENI AI STUDIO'),
-                React.createElement('div', { className: 'flex-1 overflow-y-auto space-y-4 mb-4' },
+            return React.createElement('div', { className: 'max-w-3xl mx-auto p-4 flex flex-col h-screen' },
+                React.createElement('header', { className: 'py-4 border-b border-slate-800 mb-4' },
+                    React.createElement('h1', { className: 'text-2xl font-bold text-blue-500' }, 'GENI AI STUDIO')
+                ),
+                React.createElement('div', { className: 'chat-container overflow-y-auto space-y-4 mb-4 p-2' },
+                    messages.length === 0 && React.createElement('p', {className: 'text-slate-500 text-center mt-10'}, 'Bienvenue ! Posez votre première question.'),
                     messages.map((m, i) => React.createElement('div', { 
                         key: i, 
-                        className: `p-4 rounded-lg ${m.role === 'user' ? 'bg-blue-600 ml-auto' : 'bg-slate-800 mr-auto'} max-w-[80%]`
+                        className: `p-4 rounded-2xl ${m.role === 'user' ? 'bg-blue-600 ml-auto' : 'bg-slate-800 mr-auto'} max-w-[85%]`
                     }, m.text)),
-                    loading && React.createElement('div', { className: 'text-gray-400' }, 'Geni réfléchit...')
+                    loading && React.createElement('div', { className: 'text-blue-400 animate-pulse' }, 'Geni réfléchit...')
                 ),
-                React.createElement('div', { className: 'flex gap-2' },
+                React.createElement('div', { className: 'flex gap-2 bg-slate-900 p-2' },
                     React.createElement('input', {
-                        className: 'flex-1 p-3 rounded bg-slate-800 border border-slate-700 outline-none',
+                        className: 'flex-1 p-4 rounded-xl bg-slate-800 border border-slate-700 outline-none focus:border-blue-500',
                         value: input,
                         onChange: (e) => setInput(e.target.value),
                         onKeyDown: (e) => e.key === 'Enter' && askAI(),
-                        placeholder: 'Posez une question...'
+                        placeholder: 'Écrivez votre message...'
                     }),
                     React.createElement('button', { 
-                        className: 'bg-blue-600 px-6 py-3 rounded font-bold',
+                        className: 'bg-blue-600 hover:bg-blue-700 px-6 py-4 rounded-xl font-bold transition-colors',
                         onClick: askAI 
-                    }, 'OK')
+                    }, 'Envoyer')
                 )
             );
         }
