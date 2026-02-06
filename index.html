@@ -1,19 +1,24 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Geni AI Studio</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-950 text-white p-4 font-sans">
     <div class="max-w-md mx-auto mt-10">
-        <h1 class="text-3xl font-extrabold text-center text-blue-500 mb-8">GENI AI</h1>
-        <div id="chat" class="h-[400px] overflow-y-auto border border-slate-800 p-4 mb-4 bg-slate-900 rounded-xl flex flex-col gap-3">
-            <div class="text-gray-500 text-xs text-center">Système : Tentative de connexion finale...</div>
+        <h1 class="text-3xl font-extrabold text-center text-blue-500 mb-8 uppercase tracking-widest">Geni AI</h1>
+
+        <div id="chat" class="h-[400px] overflow-y-auto border border-slate-800 p-4 mb-4 bg-slate-900/50 rounded-xl flex flex-col gap-3 shadow-2xl">
+            <div class="text-blue-400 text-xs text-center p-2 border border-blue-900/30 rounded-lg bg-blue-900/10">
+                Nouvelle clé détectée. Prêt pour le test !
+            </div>
         </div>
+
         <div class="flex gap-2">
-            <input id="input" type="text" class="flex-1 p-3 rounded-lg bg-slate-800 border border-slate-700 outline-none" placeholder="Dis quelque chose...">
-            <button onclick="send()" id="btn" class="bg-blue-600 px-6 py-2 rounded-lg font-bold">OK</button>
+            <input id="input" type="text" class="flex-1 p-3 rounded-lg bg-slate-800 border border-slate-700 focus:border-blue-500 outline-none transition-all" placeholder="Dis-moi quelque chose...">
+            <button onclick="send()" id="btn" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-lg font-bold shadow-lg transition-all active:scale-95 text-white">OK</button>
         </div>
     </div>
 
@@ -23,43 +28,46 @@
             const chat = document.getElementById('chat');
             const btn = document.getElementById('btn');
             const msg = input.value.trim();
+            
             if(!msg) return;
 
-            chat.innerHTML += `<div class="self-end bg-blue-600 px-4 py-2 rounded-lg">${msg}</div>`;
+            // Affichage Moi
+            chat.innerHTML += `<div class="self-end bg-blue-700 px-4 py-2 rounded-2xl rounded-tr-none max-w-[85%] shadow-sm">${msg}</div>`;
             input.value = "";
             btn.disabled = true;
+            btn.innerText = "...";
 
-            // On essaie les deux noms possibles car Google change tout le temps
-            const models = ["gemini-1.5-flash", "gemini-pro"];
-            const key = "AIzaSyAStizmDNkYu4VSFvLTFGqXrCSSm2U4WRE";
-            let success = false;
+            try {
+                // Ta nouvelle clé est ici
+                const key = "AIzaSyAp-p_D0sODpz3v7IE6NZgYLaPoRsLnOKI";
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+                
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: msg }] }] })
+                });
 
-            for (let model of models) {
-                if (success) break;
-                try {
-                    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
-                    const response = await fetch(url, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ contents: [{ parts: [{ text: msg }] }] })
-                    });
-
-                    const data = await response.json();
-                    if (data.candidates && data.candidates[0].content) {
-                        const reply = data.candidates[0].content.parts[0].text;
-                        chat.innerHTML += `<div class="self-start bg-slate-800 px-4 py-2 rounded-lg text-emerald-300"><b>Geni (${model}):</b> ${reply}</div>`;
-                        success = true;
-                    }
-                } catch (e) { console.log("Echec avec " + model); }
-            }
-
-            if (!success) {
-                chat.innerHTML += `<div class="text-red-500 text-xs text-center">Erreur persistante : Modèle introuvable ou clé restreinte.</div>`;
+                const data = await response.json();
+                
+                if (data.candidates && data.candidates[0].content) {
+                    const reply = data.candidates[0].content.parts[0].text;
+                    chat.innerHTML += `<div class="self-start bg-slate-800 border border-slate-700 px-4 py-2 rounded-2xl rounded-tl-none max-w-[85%] text-emerald-100 shadow-sm"><b>Geni:</b> ${reply}</div>`;
+                } else if (data.error) {
+                    // On affiche l'erreur exacte si Google refuse
+                    chat.innerHTML += `<div class="text-red-400 text-xs text-center p-2 bg-red-900/20 rounded">Info : ${data.error.message}</div>`;
+                }
+            } catch (e) {
+                chat.innerHTML += `<div class="text-red-400 text-xs text-center">Erreur de connexion réseau.</div>`;
             }
 
             btn.disabled = false;
+            btn.innerText = "OK";
             chat.scrollTop = chat.scrollHeight;
         }
+
+        // Touche Entrée pour envoyer
+        document.getElementById('input').addEventListener('keypress', (e) => { if (e.key === 'Enter') send(); });
     </script>
 </body>
 </html>
