@@ -2,17 +2,16 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Geni AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-black text-white p-4">
+<body class="bg-slate-950 text-white p-4">
     <div class="max-w-md mx-auto">
-        <h1 class="text-blue-500 text-2xl font-bold mb-4">GENI AI</h1>
-        <div id="chat" class="h-80 overflow-y-auto border border-gray-800 p-3 mb-4 rounded bg-gray-900"></div>
+        <h1 class="text-blue-500 text-2xl font-bold mb-4 text-center">GENI AI</h1>
+        <div id="chat" class="h-80 overflow-y-auto border border-slate-800 p-3 mb-4 rounded bg-slate-900 shadow-inner"></div>
         <div class="flex gap-2">
-            <input id="input" type="text" class="flex-1 p-2 rounded bg-gray-800 text-white border border-gray-700" placeholder="Dis salut...">
-            <button onclick="send()" class="bg-blue-600 px-4 py-2 rounded">OK</button>
+            <input id="input" type="text" class="flex-1 p-2 rounded bg-slate-800 border border-slate-700 focus:border-blue-500 outline-none" placeholder="Écris ici...">
+            <button onclick="send()" class="bg-blue-600 px-6 py-2 rounded font-bold">OK</button>
         </div>
     </div>
 
@@ -20,36 +19,35 @@
         async function send() {
             const input = document.getElementById('input');
             const chat = document.getElementById('chat');
-            if(!input.value) return;
+            const msg = input.value.trim();
+            if(!msg) return;
 
-            const userMsg = input.value;
-            chat.innerHTML += `<p style="color:gray">Moi: ${userMsg}</p>`;
+            chat.innerHTML += `<div class="mb-2"><b>Moi:</b> ${msg}</div>`;
             input.value = "";
 
             try {
-                // Utilisation du modèle gemini-1.5-flash avec la clé directe
                 const key = "AIzaSyAZKlxeUjqOdum0dcmJyQrJdD0AcBgSeP4";
-                const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + key;
+                // On utilise la version v1 (plus stable) au lieu de v1beta
+                const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${key}`;
                 
                 const response = await fetch(url, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: userMsg }] }]
-                    })
+                    body: JSON.stringify({ contents: [{ parts: [{ text: msg }] }] })
                 });
 
                 const data = await response.json();
                 
-                // On vérifie si l'IA a répondu correctement
                 if (data.candidates && data.candidates[0].content) {
-                    const reply = data.candidates[0].content.parts[0].text;
-                    chat.innerHTML += `<p style="color:cyan"><b>Geni:</b> ${reply}</p>`;
+                    const text = data.candidates[0].content.parts[0].text;
+                    chat.innerHTML += `<div class="mb-4 text-green-400"><b>Geni:</b> ${text}</div>`;
                 } else {
-                    chat.innerHTML += `<p class="text-red-500">Erreur: Clé API inactive ou limite atteinte.</p>`;
+                    // Si ça échoue, on affiche le message d'erreur de Google pour comprendre
+                    const errorMsg = data.error ? data.error.message : "Vérifie ta console Google AI";
+                    chat.innerHTML += `<div class="text-red-500 text-xs">Note: ${errorMsg}</div>`;
                 }
             } catch (e) {
-                chat.innerHTML += `<p class="text-red-500">Bug connexion...</p>`;
+                chat.innerHTML += `<div class="text-red-500">Erreur réseau</div>`;
             }
             chat.scrollTop = chat.scrollHeight;
         }
