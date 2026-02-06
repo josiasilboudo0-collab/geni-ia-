@@ -1,29 +1,28 @@
 <!DOCTYPE html>
+<html>
+<body style="background:#000; color:#fff; font-family:sans-serif; padding:20px;">
+    <h1>GENI IA TEST</h1>
+    <div id="chat" style="height:300px; overflow:auto; border:1px solid #333; margin-bottom:10px; padding:10px;"></div>
+    <input id="msg" style="color:#000; width:70%;">
+    <button onclick="send()" style="background:blue; color:white; padding:5px 15px;">OK</button>
 
-<html> <head> <meta charset="UTF-8"> <title>Geni AI Studio</title> <script src="https://cdn.tailwindcss.com"></script> </head> <body class="bg-slate-950 text-white p-6"> <div class="max-w-md mx-auto"> <h1 class="text-2xl font-bold text-blue-500 mb-4">GENI AI</h1> <div id="chat" class="h-80 overflow-y-auto border border-slate-800 p-4 mb-4 bg-slate-900 rounded-lg"></div> <div class="flex gap-2"> <input id="input" type="text" class="flex-1 p-2 rounded bg-slate-800 outline-none border border-slate-700" placeholder="Ton message..."> <button onclick="send()" class="bg-blue-600 px-4 py-2 rounded font-bold hover:bg-blue-500">OK</button> </div> </div>
+    <script>
+        async function send() {
+            const input = document.getElementById('msg');
+            const chat = document.getElementById('chat');
+            const prompt = input.value;
+            
+            chat.innerHTML += `<p><b>Moi:</b> ${prompt}</p>`;
+            input.value = "";
 
-<script>
-    async function send() {
-        const input = document.getElementById('input');
-        const chat = document.getElementById('chat');
-        const val = input.value;
-        if(!val) return;
-
-        chat.innerHTML += `<p class="mb-2 text-blue-400"><b>Moi:</b> ${val}</p>`;
-        input.value = "";
-
-        try {
             const res = await fetch('/api/chat', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ prompt: val })
+                body: JSON.stringify({ prompt: prompt })
             });
             const data = await res.json();
-            chat.innerHTML += `<p class="mb-4 text-green-400"><b>Geni:</b> ${data.text}</p>`;
-        } catch (e) {
-            chat.innerHTML += `<p class="text-red-500 text-xs">Erreur de connexion</p>`;
+            chat.innerHTML += `<p style="color:cyan"><b>Geni:</b> ${data.text}</p>`;
         }
-        chat.scrollTop = chat.scrollHeight;
-    }
-</script>
-</body> </html>
+    </script>
+</body>
+</html>
