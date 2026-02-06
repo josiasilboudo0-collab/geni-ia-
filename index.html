@@ -10,11 +10,11 @@
     <div class="max-w-md mx-auto mt-10">
         <div class="text-center mb-8">
             <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">GENI AI</h1>
-            <p class="text-slate-500 text-sm">Propulsé par Google Gemini</p>
+            <p class="text-slate-500 text-sm">Propulsé par Gemini Pro</p>
         </div>
 
         <div id="chat" class="h-[400px] overflow-y-auto border border-slate-800 p-4 mb-4 bg-slate-900/50 rounded-xl shadow-inner flex flex-col gap-3">
-            <div class="text-emerald-400 text-sm italic text-center">Système : Connexion établie.</div>
+            <div class="text-emerald-400 text-sm italic text-center">Système : Prêt à discuter.</div>
         </div>
 
         <div class="flex gap-2">
@@ -32,7 +32,6 @@
             
             if(!msg) return;
 
-            // Affichage Moi
             chat.innerHTML += `<div class="self-end bg-blue-600 px-4 py-2 rounded-2xl rounded-tr-none max-w-[80%] shadow-md">${msg}</div>`;
             input.value = "";
             btn.disabled = true;
@@ -40,8 +39,8 @@
 
             try {
                 const key = "AIzaSyAStizmDNkYu4VSFvLTFGqXrCSSm2U4WRE";
-                // URL configurée pour le modèle Gemini 1.5 Flash
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+                // CHANGEMENT ICI : On utilise gemini-pro (plus compatible)
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${key}`;
                 
                 const response = await fetch(url, {
                     method: "POST",
@@ -55,11 +54,10 @@
                     const reply = data.candidates[0].content.parts[0].text;
                     chat.innerHTML += `<div class="self-start bg-slate-800 border border-slate-700 px-4 py-2 rounded-2xl rounded-tl-none max-w-[80%] text-emerald-100 shadow-md"><b>Geni:</b> ${reply}</div>`;
                 } else {
-                    const errorMsg = data.error ? data.error.message : "Erreur de réponse";
-                    chat.innerHTML += `<div class="text-red-400 text-xs text-center p-2 bg-red-900/20 rounded">Erreur : ${errorMsg}</div>`;
+                    chat.innerHTML += `<div class="text-red-400 text-xs text-center p-2">Erreur : ${data.error ? data.error.message : "Réponse vide"}</div>`;
                 }
             } catch (e) {
-                chat.innerHTML += `<div class="text-red-400 text-xs text-center">Erreur réseau. Réessaie.</div>`;
+                chat.innerHTML += `<div class="text-red-400 text-xs text-center">Erreur réseau.</div>`;
             }
 
             btn.disabled = false;
@@ -67,10 +65,7 @@
             chat.scrollTop = chat.scrollHeight;
         }
 
-        // Permet d'envoyer avec la touche "Entrée"
-        document.getElementById('input').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') send();
-        });
+        document.getElementById('input').addEventListener('keypress', (e) => { if (e.key === 'Enter') send(); });
     </script>
 </body>
 </html>
