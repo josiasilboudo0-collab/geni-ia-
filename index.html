@@ -27,8 +27,8 @@
 
             try {
                 const key = "AIzaSyAZKlxeUjqOdum0dcmJyQrJdD0AcBgSeP4";
-                // On utilise la version v1 (plus stable) au lieu de v1beta
-                const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${key}`;
+                // On utilise v1beta avec le nom exact du modele
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
                 
                 const response = await fetch(url, {
                     method: "POST",
@@ -41,13 +41,11 @@
                 if (data.candidates && data.candidates[0].content) {
                     const text = data.candidates[0].content.parts[0].text;
                     chat.innerHTML += `<div class="mb-4 text-green-400"><b>Geni:</b> ${text}</div>`;
-                } else {
-                    // Si ça échoue, on affiche le message d'erreur de Google pour comprendre
-                    const errorMsg = data.error ? data.error.message : "Vérifie ta console Google AI";
-                    chat.innerHTML += `<div class="text-red-500 text-xs">Note: ${errorMsg}</div>`;
+                } else if (data.error) {
+                    chat.innerHTML += `<div class="text-red-500 text-xs">Note: ${data.error.message}</div>`;
                 }
             } catch (e) {
-                chat.innerHTML += `<div class="text-red-500">Erreur réseau</div>`;
+                chat.innerHTML += `<div class="text-red-500">Erreur de connexion</div>`;
             }
             chat.scrollTop = chat.scrollHeight;
         }
