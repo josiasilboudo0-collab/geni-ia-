@@ -10,7 +10,7 @@
         <h1 class="text-blue-500 text-2xl font-bold mb-4 text-center">GENI AI</h1>
         <div id="chat" class="h-80 overflow-y-auto border border-slate-800 p-3 mb-4 rounded bg-slate-900 shadow-inner"></div>
         <div class="flex gap-2">
-            <input id="input" type="text" class="flex-1 p-2 rounded bg-slate-800 border border-slate-700 focus:border-blue-500 outline-none" placeholder="Écris ici...">
+            <input id="input" type="text" class="flex-1 p-2 rounded bg-slate-800 border border-slate-700 outline-none" placeholder="Dis quelque chose...">
             <button onclick="send()" class="bg-blue-600 px-6 py-2 rounded font-bold">OK</button>
         </div>
     </div>
@@ -22,14 +22,14 @@
             const msg = input.value.trim();
             if(!msg) return;
 
-            chat.innerHTML += `<div class="mb-2"><b>Moi:</b> ${msg}</div>`;
+            chat.innerHTML += `<div class="mb-2 text-blue-300"><b>Moi:</b> ${msg}</div>`;
             input.value = "";
 
+            const key = "AIzaSyAZKlxeUjqOdum0dcmJyQrJdD0AcBgSeP4";
+            // On tente le modèle 1.0-pro qui est le plus accepté
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent?key=${key}`;
+
             try {
-                const key = "AIzaSyAZKlxeUjqOdum0dcmJyQrJdD0AcBgSeP4";
-                // On utilise v1beta avec le nom exact du modele
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
-                
                 const response = await fetch(url, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -41,11 +41,12 @@
                 if (data.candidates && data.candidates[0].content) {
                     const text = data.candidates[0].content.parts[0].text;
                     chat.innerHTML += `<div class="mb-4 text-green-400"><b>Geni:</b> ${text}</div>`;
-                } else if (data.error) {
-                    chat.innerHTML += `<div class="text-red-500 text-xs">Note: ${data.error.message}</div>`;
+                } else {
+                    const info = data.error ? data.error.message : "Erreur inconnue";
+                    chat.innerHTML += `<div class="text-red-500 text-xs">Note technique : ${info}</div>`;
                 }
             } catch (e) {
-                chat.innerHTML += `<div class="text-red-500">Erreur de connexion</div>`;
+                chat.innerHTML += `<div class="text-red-500">Erreur réseau</div>`;
             }
             chat.scrollTop = chat.scrollHeight;
         }
