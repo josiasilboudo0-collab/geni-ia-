@@ -1,27 +1,59 @@
 <!DOCTYPE html>
-<html>
-<body style="background:#000; color:#fff; font-family:sans-serif; padding:20px;">
-    <h1>GENI IA TEST</h1>
-    <div id="chat" style="height:300px; overflow:auto; border:1px solid #333; margin-bottom:10px; padding:10px;"></div>
-    <input id="msg" style="color:#000; width:70%;">
-    <button onclick="send()" style="background:blue; color:white; padding:5px 15px;">OK</button>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Geni AI Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-white p-6">
+    <div class="max-w-md mx-auto">
+        <h1 class="text-2xl font-bold text-blue-500 mb-4 text-center">GENI AI STUDIO</h1>
+        <div id="chat" class="h-96 overflow-y-auto border border-slate-800 p-4 mb-4 bg-slate-900 rounded-lg shadow-xl">
+            <p class="text-gray-400 italic">Prêt à discuter !</p>
+        </div>
+        <div class="flex gap-2">
+            <input id="input" type="text" class="flex-1 p-3 rounded bg-slate-800 outline-none border border-slate-700 focus:border-blue-500" placeholder="Écris ici...">
+            <button onclick="send()" id="btn" class="bg-blue-600 px-6 py-2 rounded font-bold hover:bg-blue-500 transition">OK</button>
+        </div>
+    </div>
 
     <script>
         async function send() {
-            const input = document.getElementById('msg');
+            const input = document.getElementById('input');
             const chat = document.getElementById('chat');
-            const prompt = input.value;
-            
-            chat.innerHTML += `<p><b>Moi:</b> ${prompt}</p>`;
-            input.value = "";
+            const btn = document.getElementById('btn');
+            const val = input.value.trim();
+            if(!val) return;
 
-            const res = await fetch('/api/chat', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ prompt: prompt })
-            });
-            const data = await res.json();
-            chat.innerHTML += `<p style="color:cyan"><b>Geni:</b> ${data.text}</p>`;
+            // Affichage message utilisateur
+            chat.innerHTML += `<div class="mb-4 text-right"><span class="bg-blue-600 px-3 py-2 rounded-lg inline-block">${val}</span></div>`;
+            input.value = "";
+            btn.disabled = true;
+            btn.innerText = "...";
+
+            try {
+                // APPEL DIRECT À L'IA (Sans dossier API)
+                const apiKey = "AIzaSyAZKlxeUjqOdum0dcmJyQrJdD0AcBgSeP4";
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+                
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: val }] }] })
+                });
+
+                const data = await response.json();
+                const text = data.candidates[0].content.parts[0].text;
+                
+                // Affichage réponse Geni
+                chat.innerHTML += `<div class="mb-4 text-left"><span class="bg-slate-800 px-3 py-2 rounded-lg inline-block text-green-400"><b>Geni:</b> ${text}</span></div>`;
+            } catch (e) {
+                chat.innerHTML += `<p class="text-red-500 text-xs text-center">Erreur : Vérifie ta connexion ou la clé.</p>`;
+            }
+            
+            btn.disabled = false;
+            btn.innerText = "OK";
+            chat.scrollTop = chat.scrollHeight;
         }
     </script>
 </body>
