@@ -1,3 +1,29 @@
 <!DOCTYPE html>
 
-<html> <head> <meta charset="UTF-8"> <title>Geni AI</title> <script src=""></script> <script src=""></script> <script src=""></script> </head> <body class="bg-slate-900 text-white p-4"> <div id="root"></div> <script> const React = window.React; function App() { const [input, setInput] = React.useState(""); const [msgs, setMsgs] = React.useState([{r:'ai', t:'Prêt !'}]); const send = async () => { if(!input) return; const txt = input; setInput(""); setMsgs(p => [...p, {r:'user', t:txt}]); const res = await fetch('/api/chat', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({prompt: txt}) }); const data = await res.json(); setMsgs(p => [...p, {r:'ai', t:data.text}]); }; return React.createElement('div', {className:'max-w-md mx-auto'}, React.createElement('h1', {className:'text-blue-500 font-bold mb-4'}, 'GENI AI'), React.createElement('div', {className:'space-y-4 mb-4'}, msgs.map((m,i) => React.createElement('div', {key:i, className: m.r==='user'?'text-right':'text-left'}, React.createElement('span', {className: m.r==='user'?'bg-blue-600 p-2 rounded':'bg-gray-700 p-2 rounded'}, m.t) ) )), React.createElement('div', {className:'flex gap-2'}, React.createElement('input', {className:'text-black flex-1 p-2 rounded', value:input, onChange:e=>setInput(e.target.value)}), React.createElement('button', {className:'bg-blue-600 p-2 rounded', onClick:send}, 'OK') ) ); } window.ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App)); </script> </body> </html>
+<html> <head> <meta charset="UTF-8"> <title>Geni AI Studio</title> <script src="https://cdn.tailwindcss.com"></script> </head> <body class="bg-slate-950 text-white p-6"> <div class="max-w-md mx-auto"> <h1 class="text-2xl font-bold text-blue-500 mb-4">GENI AI</h1> <div id="chat" class="h-80 overflow-y-auto border border-slate-800 p-4 mb-4 bg-slate-900 rounded-lg"></div> <div class="flex gap-2"> <input id="input" type="text" class="flex-1 p-2 rounded bg-slate-800 outline-none border border-slate-700" placeholder="Ton message..."> <button onclick="send()" class="bg-blue-600 px-4 py-2 rounded font-bold hover:bg-blue-500">OK</button> </div> </div>
+
+<script>
+    async function send() {
+        const input = document.getElementById('input');
+        const chat = document.getElementById('chat');
+        const val = input.value;
+        if(!val) return;
+
+        chat.innerHTML += `<p class="mb-2 text-blue-400"><b>Moi:</b> ${val}</p>`;
+        input.value = "";
+
+        try {
+            const res = await fetch('/api/chat', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ prompt: val })
+            });
+            const data = await res.json();
+            chat.innerHTML += `<p class="mb-4 text-green-400"><b>Geni:</b> ${data.text}</p>`;
+        } catch (e) {
+            chat.innerHTML += `<p class="text-red-500 text-xs">Erreur de connexion</p>`;
+        }
+        chat.scrollTop = chat.scrollHeight;
+    }
+</script>
+</body> </html>
