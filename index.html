@@ -2,24 +2,20 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Geni AI Studio</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-950 text-white p-4 font-sans">
     <div class="max-w-md mx-auto mt-10">
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">GENI AI</h1>
-            <p class="text-slate-500 text-sm">Propulsé par Gemini Pro</p>
-        </div>
+        <h1 class="text-3xl font-extrabold text-center text-blue-500 mb-8">GENI AI</h1>
 
-        <div id="chat" class="h-[400px] overflow-y-auto border border-slate-800 p-4 mb-4 bg-slate-900/50 rounded-xl shadow-inner flex flex-col gap-3">
-            <div class="text-emerald-400 text-sm italic text-center">Système : Prêt à discuter.</div>
+        <div id="chat" class="h-[400px] overflow-y-auto border border-slate-800 p-4 mb-4 bg-slate-900 rounded-xl flex flex-col gap-3">
+            <div class="text-gray-500 text-xs text-center">Système : Mode Secours Activé</div>
         </div>
 
         <div class="flex gap-2">
-            <input id="input" type="text" class="flex-1 p-3 rounded-lg bg-slate-800 border border-slate-700 focus:border-blue-500 outline-none transition-all" placeholder="Pose-moi une question...">
-            <button onclick="send()" id="btn" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-lg font-bold shadow-lg transition-all active:scale-95 text-white">OK</button>
+            <input id="input" type="text" class="flex-1 p-3 rounded-lg bg-slate-800 outline-none border border-slate-700 focus:border-blue-500" placeholder="Tape ton message...">
+            <button onclick="send()" id="btn" class="bg-blue-600 px-6 py-2 rounded-lg font-bold">OK</button>
         </div>
     </div>
 
@@ -29,43 +25,42 @@
             const chat = document.getElementById('chat');
             const btn = document.getElementById('btn');
             const msg = input.value.trim();
-            
             if(!msg) return;
 
-            chat.innerHTML += `<div class="self-end bg-blue-600 px-4 py-2 rounded-2xl rounded-tr-none max-w-[80%] shadow-md">${msg}</div>`;
+            chat.innerHTML += `<div class="self-end bg-blue-600 px-4 py-2 rounded-lg">${msg}</div>`;
             input.value = "";
             btn.disabled = true;
-            btn.innerText = "...";
 
             try {
                 const key = "AIzaSyAStizmDNkYu4VSFvLTFGqXrCSSm2U4WRE";
-                // CHANGEMENT ICI : On utilise gemini-pro (plus compatible)
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${key}`;
+                
+                // TEST ULTIME : L'URL la plus compatible au monde chez Google
+                const url = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${key}`;
                 
                 const response = await fetch(url, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: msg }] }] })
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: msg }] }]
+                    })
                 });
 
                 const data = await response.json();
                 
                 if (data.candidates && data.candidates[0].content) {
                     const reply = data.candidates[0].content.parts[0].text;
-                    chat.innerHTML += `<div class="self-start bg-slate-800 border border-slate-700 px-4 py-2 rounded-2xl rounded-tl-none max-w-[80%] text-emerald-100 shadow-md"><b>Geni:</b> ${reply}</div>`;
-                } else {
-                    chat.innerHTML += `<div class="text-red-400 text-xs text-center p-2">Erreur : ${data.error ? data.error.message : "Réponse vide"}</div>`;
+                    chat.innerHTML += `<div class="self-start bg-slate-800 px-4 py-2 rounded-lg text-emerald-300"><b>Geni:</b> ${reply}</div>`;
+                } else if (data.error) {
+                    // Si ça échoue encore, on affiche le message précis de Google
+                    chat.innerHTML += `<div class="text-red-500 text-xs">Aïe ! Google dit : ${data.error.message}</div>`;
                 }
             } catch (e) {
-                chat.innerHTML += `<div class="text-red-400 text-xs text-center">Erreur réseau.</div>`;
+                chat.innerHTML += `<div class="text-red-500 text-xs">Erreur de connexion.</div>`;
             }
 
             btn.disabled = false;
-            btn.innerText = "OK";
             chat.scrollTop = chat.scrollHeight;
         }
-
-        document.getElementById('input').addEventListener('keypress', (e) => { if (e.key === 'Enter') send(); });
     </script>
 </body>
 </html>
